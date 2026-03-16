@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INVICTUS: Chronicle — Sistema de Progresión</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090d;--bg2:#090c11;--surface:#0d1119;--surface2:#111620;
+  --border:#181f2e;--border2:#202a3a;
+  --text:#a8b8c8;--text-dim:#445060;--text-bright:#d0e0f0;
+  --gold:#c8a44a;--gold2:#e0bc6a;--gold-dim:rgba(200,164,74,0.07);
+  --red:#c04848;--red-dim:rgba(192,72,72,0.07);
+  --green:#3a9c6a;--green-dim:rgba(58,156,106,0.07);
+  --blue:#3a78c8;--blue-dim:rgba(58,120,200,0.07);
+  --yellow:#b89030;--yellow-dim:rgba(184,144,48,0.07);
+  --purple:#7a50c8;--purple-dim:rgba(122,80,200,0.07);
+  --vip:#c87820;--vip-dim:rgba(200,120,32,0.08);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;line-height:1.7;display:flex;min-height:100vh;}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+#sidebar{width:250px;background:var(--bg2);border-right:1px solid var(--border);height:100vh;position:fixed;top:0;left:0;overflow-y:auto;display:flex;flex-direction:column;z-index:50;}
+.sb-top{padding:20px 18px 16px;border-bottom:1px solid var(--border);}
+.sb-logo{font-family:'Cinzel',serif;font-size:.78rem;font-weight:700;color:var(--gold);letter-spacing:.1em;margin-bottom:2px;}
+.sb-sub{font-size:.63rem;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;letter-spacing:.05em;}
+.sb-nav{padding:8px 0 20px}
+.sb-group{padding:10px 14px 2px}
+.sb-group-label{font-family:'IBM Plex Mono',monospace;font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;}
+.sb-link{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:4px;color:var(--text-dim);text-decoration:none;font-size:.77rem;transition:all .12s;}
+.sb-link:hover{background:var(--surface);color:var(--text-bright)}
+.sb-link.active{background:rgba(200,164,74,0.08);color:var(--gold);border-left:2px solid var(--gold);padding-left:8px;}
+
+#main{margin-left:250px;width:calc(100% - 250px);min-width:0;overflow-x:hidden;}
+
+.banner{background:var(--bg2);border-bottom:1px solid var(--border);padding:48px 60px 44px;position:relative;overflow:hidden;}
+.banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 70% at 15% 50%,rgba(200,164,74,0.04),transparent 60%),radial-gradient(ellipse 40% 60% at 85% 40%,rgba(122,80,200,0.03),transparent 60%);pointer-events:none;}
+.bn-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.bn-eyebrow::before{content:'//';color:var(--border2)}
+.bn-h1{font-size:clamp(1.4rem,3vw,2.2rem);font-weight:700;color:var(--text-bright);line-height:1.1;margin-bottom:10px;}
+.bn-h1 span{color:var(--gold);font-family:'Cinzel',serif;}
+.bn-desc{font-size:.88rem;color:var(--text-dim);max-width:560px;line-height:1.8;margin-bottom:20px;}
+.bn-tags{display:flex;gap:8px;flex-wrap:wrap;}
+.bn-tag{font-family:'IBM Plex Mono',monospace;font-size:.6rem;padding:3px 8px;border-radius:3px;border:1px solid var(--border2);color:var(--text-dim);}
+
+.content{padding:0 60px 80px;max-width:1000px;}
+
+.chapter{padding:52px 0 44px;border-bottom:1px solid var(--border);}
+.chapter:last-of-type{border-bottom:none}
+.ch-tag{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.ch-tag .n{color:var(--gold)}
+.ch-h2{font-size:1.2rem;font-weight:700;color:var(--text-bright);margin-bottom:8px;}
+.ch-lead{font-size:.88rem;color:var(--text-dim);max-width:600px;line-height:1.85;margin-bottom:28px;font-style:italic;border-left:2px solid var(--border2);padding-left:12px;}
+
+p{font-size:.88rem;color:var(--text);line-height:1.85;margin-bottom:12px}
+strong{color:var(--text-bright);font-weight:600}
+
+.callout{border-radius:6px;padding:12px 14px;margin:16px 0;display:flex;gap:10px;font-size:.85rem;}
+.callout-icon{flex-shrink:0;margin-top:2px;}
+.callout-body{color:var(--text-dim);line-height:1.7}
+.callout-body strong{color:var(--text-bright);display:block;margin-bottom:3px;font-size:.83rem;}
+.callout.info{background:var(--blue-dim);border:1px solid rgba(58,120,200,0.18)}
+.callout.info .callout-body strong{color:#6a9be0}
+.callout.gold{background:var(--gold-dim);border:1px solid rgba(200,164,74,0.2)}
+.callout.gold .callout-body strong{color:var(--gold2)}
+.callout.warn{background:var(--yellow-dim);border:1px solid rgba(184,144,48,0.18)}
+.callout.warn .callout-body strong{color:var(--yellow)}
+
+/* RANK CARDS */
+.ranks-grid{display:flex;flex-direction:column;gap:4px;margin:20px 0;}
+.act-divider{display:flex;align-items:center;gap:10px;margin:16px 0 8px;padding:6px 0;}
+.act-divider-label{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;}
+.act-divider-line{flex:1;height:1px;background:var(--border);}
+.rank-card{display:grid;grid-template-columns:40px 140px 120px 1fr 160px 160px;gap:0;align-items:start;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;transition:border-color .15s;}
+.rank-card:hover{border-color:var(--border2)}
+.rank-card.entry{border-left:2px solid var(--text-dim)}
+.rank-card.nadie{border-left:2px solid #6B7FA3}
+.rank-card.voto{border-left:2px solid #4A7FD4}
+.rank-card.presagio{border-left:2px solid #E84040}
+.rank-card.poder{border-left:2px solid #7a50c8}
+.rank-card.trascendencia{border-left:2px solid var(--gold)}
+.rank-card.vip-card{border-left:2px solid var(--vip);background:rgba(200,120,32,0.03)}
+.rc-num{padding:14px 0 14px 12px;font-family:'IBM Plex Mono',monospace;font-size:.65rem;color:var(--text-dim);display:flex;align-items:flex-start;padding-top:14px;}
+.rc-name{padding:12px 10px;display:flex;flex-direction:column;gap:3px;border-right:1px solid var(--border);}
+.rc-name-text{font-weight:600;font-size:.85rem;color:var(--text-bright);}
+.rc-color-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;}
+.rc-color-hex{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--text-dim);}
+.rc-act{padding:12px 10px;border-right:1px solid var(--border);display:flex;align-items:flex-start;}
+.act-badge{font-size:.58rem;padding:2px 7px;border-radius:10px;font-weight:500;white-space:nowrap;}
+.ab-entry{background:#F1EFE8;color:#444441}
+.ab-nadie{background:#E6F1FB;color:#185FA5}
+.ab-voto{background:#E6F1FB;color:#0C447C}
+.ab-presagio{background:#FCEBEB;color:#A32D2D}
+.ab-poder{background:#EEEDFE;color:#534AB7}
+.ab-trascendencia{background:#FAEEDA;color:#633806}
+.ab-vip{background:rgba(200,120,32,0.15);color:#c87820;}
+.rc-reqs{padding:12px 10px;border-right:1px solid var(--border);}
+.rc-perks{padding:12px 10px;border-right:1px solid var(--border);}
+.rc-cost{padding:12px 10px;}
+.tag{display:inline-block;font-size:.65rem;padding:1px 6px;border-radius:3px;font-weight:500;margin:1px 2px 1px 0;white-space:nowrap;}
+.t-hrs{background:#E6F1FB;color:#0C447C}
+.t-kills{background:#FCEBEB;color:#791F1F}
+.t-miss{background:#EAF3DE;color:#27500A}
+.t-mat{background:#EEEDFE;color:#3C3489}
+.p-mine{background:#FAEEDA;color:#633806}
+.p-home{background:#EAF3DE;color:#27500A}
+.p-cmd{background:#E6F1FB;color:#0C447C}
+.p-mission{background:#EEEDFE;color:#3C3489}
+.p-particle{background:#FBEAF0;color:#72243E}
+.p-vip-ex{background:#FCEBEB;color:#791F1F}
+.cost-val{font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--text-dim);}
+.cost-val.big{color:var(--yellow);font-weight:500;}
+.cost-val.vip-price{color:var(--vip);font-weight:600;font-size:.82rem;}
+.free-note{font-size:.7rem;color:var(--text-dim);font-style:italic;}
+.none-note{font-size:.7rem;color:var(--text-dim);font-style:italic;}
+.inflection-bar{background:rgba(184,144,48,0.06);border:1px dashed rgba(184,144,48,0.25);border-radius:5px;padding:6px 14px;margin:10px 0;display:flex;align-items:center;gap:8px;}
+.inflection-label{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--yellow);font-weight:500;letter-spacing:.1em;text-transform:uppercase;}
+.vip-header{background:rgba(200,120,32,0.06);border:1px solid rgba(200,120,32,0.18);border-radius:6px;padding:10px 14px;margin:20px 0 12px;display:flex;align-items:center;gap:8px;}
+.vip-header-label{font-family:'IBM Plex Mono',monospace;font-size:.62rem;color:var(--vip);font-weight:500;letter-spacing:.1em;text-transform:uppercase;}
+
+/* COLUMN HEADERS */
+.col-headers{display:grid;grid-template-columns:40px 140px 120px 1fr 160px 160px;gap:0;padding:0 0 4px;}
+.col-h{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);padding:0 10px;}
+
+/* SUMMARY TABLE */
+.tbl-wrap{overflow-x:auto;margin:16px 0;border-radius:6px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--surface)}
+th{padding:8px 14px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);font-weight:500;border-bottom:1px solid var(--border);}
+td{padding:9px 14px;font-size:.84rem;color:var(--text);border-bottom:1px solid var(--border);line-height:1.5;vertical-align:top;}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.012)}
+.td-gold{color:var(--gold);font-family:'IBM Plex Mono',monospace;font-size:.8rem;}
+.td-vip{color:var(--vip);font-family:'IBM Plex Mono',monospace;font-size:.8rem;font-weight:600;}
+.td-mono{font-family:'IBM Plex Mono',monospace;font-size:.78rem;}
+
+@media(max-width:900px){#sidebar{display:none}#main{margin-left:0;width:100%}.content{padding:0 24px 60px}.banner{padding:36px 24px}.rank-card{grid-template-columns:1fr}.col-headers{display:none}}
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="sb-top">
+    <div class="sb-logo">INVICTUS: Chronicle</div>
+    <div class="sb-sub">Sistema de Progresión v1.0</div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-group">
+      <div class="sb-group-label">General</div>
+      <a class="sb-link" href="#overview">Visión General</a>
+      <a class="sb-link" href="#minas">Las 4 Minas</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">Rankups</div>
+      <a class="sb-link" href="#rankup-tabla">Tabla Completa</a>
+      <a class="sb-link" href="#rankup-costes">Costes y Economía</a>
+      <a class="sb-link" href="#rankup-colores">Colores RGB</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-label">VIPs</div>
+      <a class="sb-link" href="#vip-tabla">Tabla VIP</a>
+      <a class="sb-link" href="#vip-precios">Precios y Tienda</a>
+      <a class="sb-link" href="#vip-reglas">Reglas del Sistema</a>
+    </div>
+  </div>
+</nav>
+
+<div id="main">
+<div class="banner">
+  <div class="bn-eyebrow">Documento interno</div>
+  <h1 class="bn-h1">Sistema de Progresión<br><span>INVICTUS: Chronicle</span></h1>
+  <p class="bn-desc">Definición completa de rangos de rankup y VIP — nombres, requisitos, costes, beneficios, colores y precios de tienda.</p>
+  <div class="bn-tags">
+    <span class="bn-tag">16 rangos de rankup — reset por temporada</span>
+    <span class="bn-tag">5 rangos VIP</span>
+    <span class="bn-tag">4 minas</span>
+    <span class="bn-tag">Tienda en Tebex · USD</span>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- OVERVIEW -->
+<div class="chapter" id="overview">
+  <div class="ch-tag"><span class="n">01</span> — resumen</div>
+  <h2 class="ch-h2">Visión General del Sistema</h2>
+  <p class="ch-lead">INVICTUS: Chronicle tiene dos sistemas de progresión independientes — rankup y VIP. Cada uno tiene su propia lógica, sus propios beneficios y sus propias reglas.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Aspecto</th><th>Rankup</th><th>VIP</th></tr></thead>
+      <tbody>
+        <tr><td>Cómo se obtiene</td><td>Jugando — cumpliendo requisitos de horas, kills, misiones, materiales y dinero</td><td>Comprando en la tienda oficial (Tebex)</td></tr>
+        <tr><td>Número de rangos</td><td>16 (Hollow → Apex)</td><td>5 (Arcane → Invictus)</td></tr>
+        <tr><td>Permanencia</td><td>Permanente entre temporadas</td><td>Permanente</td></tr>
+        <tr><td>Beneficios</td><td>Minas, homes (máx. 3), comandos QoL, cooldown de misiones, partículas</td><td>Minas, homes (máx. 10), /heal, /feed, /fly, /nick, cooldown, partículas</td></tr>
+        <tr><td>Relación entre sí</td><td colspan="2">Independientes — los beneficios NO se suman. Cada sistema otorga los suyos propios.</td></tr>
+        <tr><td>Reset por temporada</td><td>Sí — vuelve a Hollow al inicio de cada temporada</td><td>No — el VIP es permanente</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout gold">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body"><strong>Independencia de sistemas</strong>Un jugador con VIP Arcane y rango Hollow tiene los beneficios de Arcane, no la suma de Hollow + Arcane. Un jugador con Apex y sin VIP tiene los beneficios de Apex. No hay beneficios combinados exclusivos.</div>
+  </div>
+</div>
+
+<!-- MINAS -->
+<div class="chapter" id="minas">
+  <div class="ch-tag"><span class="n">02</span> — minas</div>
+  <h2 class="ch-h2">Las 4 Minas</h2>
+  <p class="ch-lead">Hay 4 minas en total (sin contar la MinaPvP). Se desbloquean por rango individual del jugador — no por rango del clan. El porcentaje de recursos es relativo a la Mina A base.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Mina</th><th>Se desbloquea en</th><th>Recursos vs Mina A</th><th>Acceso VIP desde</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Mina A</strong> — Básica</td><td class="td-mono">Hollow (rango 0)</td><td>Base — referencia</td><td>Todos los VIPs</td></tr>
+        <tr><td><strong>Mina B</strong> — Media</td><td class="td-mono">Bound (rango 3)</td><td class="td-gold">+25% recursos</td><td>Arcane, Abyssal, Primordial, Oblivion, Invictus</td></tr>
+        <tr><td><strong>Mina C</strong> — Avanzada</td><td class="td-mono">Omen (rango 7)</td><td class="td-gold">+55% recursos</td><td>Abyssal, Primordial, Oblivion, Invictus</td></tr>
+        <tr><td><strong>Mina D</strong> — Élite</td><td class="td-mono">Warlord (rango 10)</td><td class="td-gold">+90% recursos</td><td>Primordial, Oblivion, Invictus</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">ℹ️</div>
+    <div class="callout-body"><strong>VIPs y la Mina D</strong>Todos los rangos VIP tienen acceso permanente a la Mina D independientemente de su rango de rankup. Es uno de los beneficios diferenciadores del primer VIP (Arcane).</div>
+  </div>
+</div>
+
+<!-- RANKUP TABLA -->
+<div class="chapter" id="rankup-tabla">
+  <div class="ch-tag"><span class="n">03</span> — rankup</div>
+  <h2 class="ch-h2">Tabla Completa de Rankups</h2>
+  <p class="ch-lead">16 rangos organizados en 5 actos narrativos. Los beneficios son acumulativos — cada rango conserva todo lo del anterior. El dinero siempre se gasta al rankear.</p>
+
+  <div class="col-headers">
+    <div class="col-h"></div>
+    <div class="col-h">Rango</div>
+    <div class="col-h">Acto</div>
+    <div class="col-h">Requisitos</div>
+    <div class="col-h">Beneficios nuevos</div>
+    <div class="col-h">Coste · Acumulado</div>
+  </div>
+
+  <div class="ranks-grid">
+
+    <!-- ENTRADA -->
+    <div class="act-divider"><div class="act-divider-label">Rango de entrada</div><div class="act-divider-line"></div></div>
+    <div class="rank-card entry">
+      <div class="rc-num">00</div>
+      <div class="rc-name"><span class="rc-name-text">Hollow</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#6B7FA3"></span>#6B7FA3</span></div>
+      <div class="rc-act"><span class="act-badge ab-entry">Entrada</span></div>
+      <div class="rc-reqs"><span class="free-note">Sin requisitos — rango inicial</span></div>
+      <div class="rc-perks"><span class="tag p-mine">Mina A</span><span class="tag p-home">1 home</span><span class="tag p-cmd">/trash</span><span class="tag p-cmd">/suicide</span></div>
+      <div class="rc-cost"><span class="free-note">Gratis</span></div>
+    </div>
+
+    <!-- ACTO I -->
+    <div class="act-divider"><div class="act-divider-label">Acto I — El Nadie</div><div class="act-divider-line"></div></div>
+    <div class="rank-card nadie">
+      <div class="rc-num">01</div>
+      <div class="rc-name"><span class="rc-name-text">Remnant</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#7A9AB5"></span>#7A9AB5</span></div>
+      <div class="rc-act"><span class="act-badge ab-nadie">El Nadie</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">3h jugadas</span><span class="tag t-miss">2 misiones</span></div>
+      <div class="rc-perks"><span class="tag p-cmd">/back</span></div>
+      <div class="rc-cost"><div class="cost-val">500,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 500K acum.</div></div>
+    </div>
+    <div class="rank-card nadie">
+      <div class="rc-num">02</div>
+      <div class="rc-name"><span class="rc-name-text">Ashen</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#9B8EC4"></span>#9B8EC4</span></div>
+      <div class="rc-act"><span class="act-badge ab-nadie">El Nadie</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">8h jugadas</span><span class="tag t-kills">5 kills</span><span class="tag t-miss">4 misiones</span></div>
+      <div class="rc-perks"><span class="none-note">Sin beneficio nuevo</span></div>
+      <div class="rc-cost"><div class="cost-val">1,000,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 1.5M acum.</div></div>
+    </div>
+
+    <!-- ACTO II -->
+    <div class="act-divider"><div class="act-divider-label">Acto II — El Voto</div><div class="act-divider-line"></div></div>
+    <div class="rank-card voto">
+      <div class="rc-num">03</div>
+      <div class="rc-name"><span class="rc-name-text">Bound</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#4A7FD4"></span>#4A7FD4</span></div>
+      <div class="rc-act"><span class="act-badge ab-voto">El Voto</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">15h jugadas</span><span class="tag t-kills">15 kills</span><span class="tag t-miss">7 misiones</span></div>
+      <div class="rc-perks"><span class="tag p-mine">Mina B +25%</span><span class="tag p-cmd">/hat</span></div>
+      <div class="rc-cost"><div class="cost-val">1,500,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 3M acum.</div></div>
+    </div>
+    <div class="rank-card voto">
+      <div class="rc-num">04</div>
+      <div class="rc-name"><span class="rc-name-text">Pact</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#2ABFCF"></span>#2ABFCF</span></div>
+      <div class="rc-act"><span class="act-badge ab-voto">El Voto</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">25h jugadas</span><span class="tag t-kills">30 kills</span><span class="tag t-miss">10 misiones</span><span class="tag t-mat">64x Iron Block</span></div>
+      <div class="rc-perks"><span class="tag p-mission">Cooldown misiones −10%</span></div>
+      <div class="rc-cost"><div class="cost-val">2,500,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 5.5M acum.</div></div>
+    </div>
+    <div class="rank-card voto">
+      <div class="rc-num">05</div>
+      <div class="rc-name"><span class="rc-name-text">Marked</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#2ABF8A"></span>#2ABF8A</span></div>
+      <div class="rc-act"><span class="act-badge ab-voto">El Voto</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">35h jugadas</span><span class="tag t-kills">50 kills</span><span class="tag t-miss">13 misiones</span></div>
+      <div class="rc-perks"><span class="tag p-home">2 homes</span><span class="tag p-cmd">/workbench</span></div>
+      <div class="rc-cost"><div class="cost-val">3,500,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 9M acum.</div></div>
+    </div>
+
+    <!-- ACTO III -->
+    <div class="act-divider"><div class="act-divider-label">Acto III — El Presagio</div><div class="act-divider-line"></div></div>
+    <div class="rank-card presagio">
+      <div class="rc-num">06</div>
+      <div class="rc-name"><span class="rc-name-text">Sworn</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#E8A020"></span>#E8A020</span></div>
+      <div class="rc-act"><span class="act-badge ab-presagio">El Presagio</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">48h jugadas</span><span class="tag t-kills">70 kills</span><span class="tag t-miss">16 misiones</span><span class="tag t-mat">32x Gold Block</span></div>
+      <div class="rc-perks"><span class="tag p-mission">Cooldown misiones −20%</span></div>
+      <div class="rc-cost"><div class="cost-val">4,500,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 13.5M acum.</div></div>
+    </div>
+    <div class="rank-card presagio">
+      <div class="rc-num">07</div>
+      <div class="rc-name"><span class="rc-name-text">Omen</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#E86820"></span>#E86820</span></div>
+      <div class="rc-act"><span class="act-badge ab-presagio">El Presagio</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">62h jugadas</span><span class="tag t-kills">90 kills</span><span class="tag t-miss">20 misiones</span></div>
+      <div class="rc-perks"><span class="tag p-mine">Mina C +55%</span></div>
+      <div class="rc-cost"><div class="cost-val">5,500,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 19M acum.</div></div>
+    </div>
+    <div class="rank-card presagio">
+      <div class="rc-num">08</div>
+      <div class="rc-name"><span class="rc-name-text">Augur</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#E84040"></span>#E84040</span></div>
+      <div class="rc-act"><span class="act-badge ab-presagio">El Presagio</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">78h jugadas</span><span class="tag t-kills">110 kills</span><span class="tag t-miss">24 misiones</span><span class="tag t-mat">16x Diamond Block</span></div>
+      <div class="rc-perks"><span class="tag p-cmd">/enderchest</span></div>
+      <div class="rc-cost"><div class="cost-val">7,000,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 26M acum.</div></div>
+    </div>
+    <div class="rank-card presagio">
+      <div class="rc-num">09</div>
+      <div class="rc-name"><span class="rc-name-text">Harbinger</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#C01830"></span>#C01830</span></div>
+      <div class="rc-act"><span class="act-badge ab-presagio">El Presagio</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">95h jugadas</span><span class="tag t-kills">135 kills</span><span class="tag t-miss">28 misiones</span></div>
+      <div class="rc-perks"><span class="tag p-home">3 homes</span><span class="tag p-mission">Cooldown misiones −30%</span></div>
+      <div class="rc-cost"><div class="cost-val">8,000,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 34M acum.</div></div>
+    </div>
+
+    <!-- INFLECTION -->
+    <div class="inflection-bar"><span class="inflection-label">⚔ Punto de inflexión — la dificultad sube notablemente desde aquí</span></div>
+
+    <!-- ACTO IV -->
+    <div class="act-divider"><div class="act-divider-label">Acto IV — El Poder</div><div class="act-divider-line"></div></div>
+    <div class="rank-card poder">
+      <div class="rc-num">10</div>
+      <div class="rc-name"><span class="rc-name-text">Warlord</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#C03030"></span>#C03030</span></div>
+      <div class="rc-act"><span class="act-badge ab-poder">El Poder</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">148h jugadas</span><span class="tag t-kills">265 kills</span><span class="tag t-miss">40 misiones</span><span class="tag t-mat">8x Netherite Ingot</span></div>
+      <div class="rc-perks"><span class="tag p-mine">Mina D +90%</span></div>
+      <div class="rc-cost"><div class="cost-val big">9,000,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 43M acum.</div></div>
+    </div>
+    <div class="rank-card poder">
+      <div class="rc-num">11</div>
+      <div class="rc-name"><span class="rc-name-text">Relic</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#A07830"></span>#A07830</span></div>
+      <div class="rc-act"><span class="act-badge ab-poder">El Poder</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">162h jugadas</span><span class="tag t-kills">310 kills</span><span class="tag t-miss">44 misiones</span></div>
+      <div class="rc-perks"><span class="tag p-mission">Cooldown misiones −40%</span></div>
+      <div class="rc-cost"><div class="cost-val big">10,000,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 53M acum.</div></div>
+    </div>
+    <div class="rank-card poder">
+      <div class="rc-num">12</div>
+      <div class="rc-name"><span class="rc-name-text">Sovereign</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#D4A020"></span>#D4A020</span></div>
+      <div class="rc-act"><span class="act-badge ab-poder">El Poder</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">172h jugadas</span><span class="tag t-kills">350 kills</span><span class="tag t-miss">48 misiones</span><span class="tag t-mat">4x Netherite Block</span></div>
+      <div class="rc-perks"><span class="tag p-particle">Partícula: corona dorada</span></div>
+      <div class="rc-cost"><div class="cost-val big">10,000,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 63M acum.</div></div>
+    </div>
+
+    <!-- ACTO V -->
+    <div class="act-divider"><div class="act-divider-label">Acto V — La Trascendencia</div><div class="act-divider-line"></div></div>
+    <div class="rank-card trascendencia">
+      <div class="rc-num">13</div>
+      <div class="rc-name"><span class="rc-name-text">Eternal</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#E8C040"></span>#E8C040</span></div>
+      <div class="rc-act"><span class="act-badge ab-trascendencia">Trascendencia</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">178h jugadas</span><span class="tag t-kills">375 kills</span><span class="tag t-miss">52 misiones</span></div>
+      <div class="rc-perks"><span class="tag p-mission">Cooldown misiones −50%</span></div>
+      <div class="rc-cost"><div class="cost-val big">11,000,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 74M acum.</div></div>
+    </div>
+    <div class="rank-card trascendencia">
+      <div class="rc-num">14</div>
+      <div class="rc-name"><span class="rc-name-text">Wraith</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#9040E0"></span>#9040E0</span></div>
+      <div class="rc-act"><span class="act-badge ab-trascendencia">Trascendencia</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">180h jugadas</span><span class="tag t-kills">390 kills</span><span class="tag t-miss">58 misiones</span><span class="tag t-mat">1x Artefacto completado</span></div>
+      <div class="rc-perks"><span class="tag p-particle">Partícula: aura espectral</span></div>
+      <div class="rc-cost"><div class="cost-val big">12,000,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">≈ 86M acum.</div></div>
+    </div>
+    <div class="rank-card trascendencia">
+      <div class="rc-num">15</div>
+      <div class="rc-name"><span class="rc-name-text">Apex</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#FFD700"></span>#FFD700</span></div>
+      <div class="rc-act"><span class="act-badge ab-trascendencia">Trascendencia</span></div>
+      <div class="rc-reqs"><span class="tag t-hrs">180h jugadas</span><span class="tag t-kills">400 kills</span><span class="tag t-miss">65 misiones</span><span class="tag t-mat">1x Cadena de Lore</span></div>
+      <div class="rc-perks"><span class="tag p-particle">Partícula: trail dorado</span><span class="tag p-mission">Cooldown misiones −60%</span></div>
+      <div class="rc-cost"><div class="cost-val big">14,000,000 ✦</div><div class="cost-val" style="font-size:.65rem;margin-top:2px;opacity:.6">= 100M acum.</div></div>
+    </div>
+
+    <!-- VIP -->
+    <div class="vip-header"><span class="vip-label">✦ Rangos VIP — Tienda oficial · Tebex · USD</span></div>
+    <div class="rank-card vip-card">
+      <div class="rc-num">V1</div>
+      <div class="rc-name"><span class="rc-name-text">Arcane</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#7B2FBE"></span>#7B2FBE</span></div>
+      <div class="rc-act"><span class="act-badge ab-vip">VIP</span></div>
+      <div class="rc-reqs"><span class="free-note">Compra en tienda</span></div>
+      <div class="rc-perks"><span class="tag p-mine">Mina B</span><span class="tag p-home">4 homes</span><span class="tag p-cmd">/heal</span><span class="tag p-cmd">/feed</span><span class="tag p-cmd">/enderchest</span><span class="tag p-cmd">/workbench</span><span class="tag p-cmd">/back</span><span class="tag p-mission">Cooldown −40%</span><span class="tag p-particle">Aura arcana</span></div>
+      <div class="rc-cost"><span class="cost-val vip-price">$4.99</span></div>
+    </div>
+    <div class="rank-card vip-card">
+      <div class="rc-num">V2</div>
+      <div class="rc-name"><span class="rc-name-text">Abyssal</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#1A3FA8"></span>#1A3FA8</span></div>
+      <div class="rc-act"><span class="act-badge ab-vip">VIP</span></div>
+      <div class="rc-reqs"><span class="free-note">Compra en tienda</span></div>
+      <div class="rc-perks"><span class="tag p-mine">Mina C</span><span class="tag p-home">6 homes</span><span class="tag p-cmd">/nick</span><span class="tag p-mission">Cooldown −55%</span><span class="tag p-particle">Aura abismal</span></div>
+      <div class="rc-cost"><span class="cost-val vip-price">$9.99</span></div>
+    </div>
+    <div class="rank-card vip-card">
+      <div class="rc-num">V3</div>
+      <div class="rc-name"><span class="rc-name-text">Primordial</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#1A6B3A"></span>#1A6B3A</span></div>
+      <div class="rc-act"><span class="act-badge ab-vip">VIP</span></div>
+      <div class="rc-reqs"><span class="free-note">Compra en tienda</span></div>
+      <div class="rc-perks"><span class="tag p-mine">Mina D</span><span class="tag p-home">8 homes</span><span class="tag p-cmd">/fly en lobby</span><span class="tag p-mission">Cooldown −65%</span><span class="tag p-particle">Trail primordial</span></div>
+      <div class="rc-cost"><span class="cost-val vip-price">$17.99</span></div>
+    </div>
+    <div class="rank-card vip-card">
+      <div class="rc-num">V4</div>
+      <div class="rc-name"><span class="rc-name-text">Oblivion</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#3A1A5A"></span>#3A1A5A</span></div>
+      <div class="rc-act"><span class="act-badge ab-vip">VIP</span></div>
+      <div class="rc-reqs"><span class="free-note">Compra en tienda</span></div>
+      <div class="rc-perks"><span class="tag p-mine">Mina D</span><span class="tag p-home">9 homes</span><span class="tag p-cmd">/fly lobby+spawn</span><span class="tag p-cmd">/nick con colores</span><span class="tag p-mission">Cooldown −75%</span><span class="tag p-particle">Aura del olvido</span></div>
+      <div class="rc-cost"><span class="cost-val vip-price">$27.99</span></div>
+    </div>
+    <div class="rank-card vip-card">
+      <div class="rc-num">V5</div>
+      <div class="rc-name"><span class="rc-name-text">Invictus</span><span class="rc-color-hex"><span class="rc-color-dot" style="background:#FFD700"></span>#FFD700</span></div>
+      <div class="rc-act"><span class="act-badge ab-vip">VIP</span></div>
+      <div class="rc-reqs"><span class="free-note">Compra en tienda</span></div>
+      <div class="rc-perks"><span class="tag p-mine">Mina D</span><span class="tag p-home">10 homes</span><span class="tag p-cmd">/fly global</span><span class="tag p-cmd">/nick degradado</span><span class="tag p-cmd">/hat animado</span><span class="tag p-mission">Cooldown −85%</span><span class="tag p-particle">Corona + trail Invictus</span><span class="tag p-vip-ex">Prefijo [INVICTUS]</span></div>
+      <div class="rc-cost"><span class="cost-val vip-price">$39.99</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- COSTES -->
+<div class="chapter" id="rankup-costes">
+  <div class="ch-tag"><span class="n">04</span> — economía</div>
+  <h2 class="ch-h2">Costes y Economía de Rankup</h2>
+  <p class="ch-lead">El dinero gastado en rankup es un sumidero económico real — desaparece del servidor al rankear. El total acumulado de Hollow a Apex es exactamente 100,000,000 ✦.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Tramo</th><th>Rangos</th><th>Coste individual</th><th>Subtotal tramo</th><th>Acumulado al final</th></tr></thead>
+      <tbody>
+        <tr><td>Hollow → Ashen</td><td>00–02</td><td class="td-mono">0 / 500K / 1M</td><td class="td-mono">1,500,000 ✦</td><td class="td-mono">1,500,000 ✦</td></tr>
+        <tr><td>Bound → Marked</td><td>03–05</td><td class="td-mono">1.5M / 2.5M / 3.5M</td><td class="td-mono">7,500,000 ✦</td><td class="td-mono">9,000,000 ✦</td></tr>
+        <tr><td>Sworn → Harbinger</td><td>06–09</td><td class="td-mono">4.5M / 5.5M / 7M / 8M</td><td class="td-mono">25,000,000 ✦</td><td class="td-mono">34,000,000 ✦</td></tr>
+        <tr><td style="color:var(--yellow)">⚔ Warlord → Sovereign</td><td>10–12</td><td class="td-mono">9M / 10M / 10M</td><td class="td-mono">29,000,000 ✦</td><td class="td-mono">63,000,000 ✦</td></tr>
+        <tr><td style="color:var(--gold)">Eternal → Apex</td><td>13–15</td><td class="td-mono">11M / 12M / 14M</td><td class="td-mono">37,000,000 ✦</td><td class="td-gold">100,000,000 ✦</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body"><strong>Calibración en beta</strong>Estos valores están estimados sobre una economía tipo prison. Deben verificarse durante la beta cerrada revisando el reporte económico diario. Si más del 40% de los jugadores no pueden rankear por falta de dinero, reducir costes. Si se rankea demasiado rápido, aumentarlos.</div>
+  </div>
+</div>
+
+<!-- COLORES -->
+<div class="chapter" id="rankup-colores">
+  <div class="ch-tag"><span class="n">05</span> — identidad visual</div>
+  <h2 class="ch-h2">Colores RGB por Rango</h2>
+  <p class="ch-lead">Colores en formato hexadecimal para usar con Birdflop RGB o MiniMessage. La progresión va de tonos fríos y apagados en los primeros rangos hacia colores cálidos y saturados en los últimos.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Rango</th><th>Color hex</th><th>Muestra</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td class="td-mono">00</td><td><strong>Hollow</strong></td><td class="td-mono">#6B7FA3</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#6B7FA3;vertical-align:middle"></span></td><td>Azul pizarra apagado</td></tr>
+        <tr><td class="td-mono">01</td><td><strong>Remnant</strong></td><td class="td-mono">#7A9AB5</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#7A9AB5;vertical-align:middle"></span></td><td>Azul grisáceo</td></tr>
+        <tr><td class="td-mono">02</td><td><strong>Ashen</strong></td><td class="td-mono">#9B8EC4</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#9B8EC4;vertical-align:middle"></span></td><td>Lavanda fría</td></tr>
+        <tr><td class="td-mono">03</td><td><strong>Bound</strong></td><td class="td-mono">#4A7FD4</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#4A7FD4;vertical-align:middle"></span></td><td>Azul cobalto</td></tr>
+        <tr><td class="td-mono">04</td><td><strong>Pact</strong></td><td class="td-mono">#2ABFCF</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#2ABFCF;vertical-align:middle"></span></td><td>Cyan vibrante</td></tr>
+        <tr><td class="td-mono">05</td><td><strong>Marked</strong></td><td class="td-mono">#2ABF8A</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#2ABF8A;vertical-align:middle"></span></td><td>Verde esmeralda</td></tr>
+        <tr><td class="td-mono">06</td><td><strong>Sworn</strong></td><td class="td-mono">#E8A020</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#E8A020;vertical-align:middle"></span></td><td>Amarillo ámbar</td></tr>
+        <tr><td class="td-mono">07</td><td><strong>Omen</strong></td><td class="td-mono">#E86820</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#E86820;vertical-align:middle"></span></td><td>Naranja fuego</td></tr>
+        <tr><td class="td-mono">08</td><td><strong>Augur</strong></td><td class="td-mono">#E84040</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#E84040;vertical-align:middle"></span></td><td>Rojo coral</td></tr>
+        <tr><td class="td-mono">09</td><td><strong>Harbinger</strong></td><td class="td-mono">#C01830</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#C01830;vertical-align:middle"></span></td><td>Rojo carmesí</td></tr>
+        <tr><td class="td-mono">10</td><td><strong>Warlord</strong></td><td class="td-mono">#C03030</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#C03030;vertical-align:middle"></span></td><td>Rojo guerra</td></tr>
+        <tr><td class="td-mono">11</td><td><strong>Relic</strong></td><td class="td-mono">#A07830</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#A07830;vertical-align:middle"></span></td><td>Marrón dorado</td></tr>
+        <tr><td class="td-mono">12</td><td><strong>Sovereign</strong></td><td class="td-mono">#D4A020</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#D4A020;vertical-align:middle"></span></td><td>Dorado real</td></tr>
+        <tr><td class="td-mono">13</td><td><strong>Eternal</strong></td><td class="td-mono">#E8C040</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#E8C040;vertical-align:middle"></span></td><td>Dorado brillante</td></tr>
+        <tr><td class="td-mono">14</td><td><strong>Wraith</strong></td><td class="td-mono">#9040E0</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#9040E0;vertical-align:middle"></span></td><td>Púrpura espectral</td></tr>
+        <tr><td class="td-mono">15</td><td><strong>Apex</strong></td><td class="td-mono">#FFD700</td><td><span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:#FFD700;vertical-align:middle"></span></td><td>Dorado luminoso</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- VIP PRECIOS -->
+<div class="chapter" id="vip-precios">
+  <div class="ch-tag"><span class="n">06</span> — tienda</div>
+  <h2 class="ch-h2">Precios VIP y Sistema de Upgrades</h2>
+  <p class="ch-lead">Tienda gestionada en Tebex. Precios en USD. Los upgrades cobran la diferencia entre el rango actual y el deseado.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Rango</th><th>Precio completo</th><th>Upgrade desde anterior</th><th>Color</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Arcane</strong></td><td class="td-vip">$4.99</td><td class="td-mono">—</td><td><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#7B2FBE;vertical-align:middle;margin-right:6px"></span>#7B2FBE</td></tr>
+        <tr><td><strong>Abyssal</strong></td><td class="td-vip">$9.99</td><td class="td-mono">$5.00 (desde Arcane)</td><td><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#1A3FA8;vertical-align:middle;margin-right:6px"></span>#1A3FA8</td></tr>
+        <tr><td><strong>Primordial</strong></td><td class="td-vip">$17.99</td><td class="td-mono">$8.00 (desde Abyssal)</td><td><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#1A6B3A;vertical-align:middle;margin-right:6px"></span>#1A6B3A</td></tr>
+        <tr><td><strong>Oblivion</strong></td><td class="td-vip">$27.99</td><td class="td-mono">$10.00 (desde Primordial)</td><td><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#3A1A5A;vertical-align:middle;margin-right:6px"></span>#3A1A5A</td></tr>
+        <tr><td><strong>Invictus</strong></td><td class="td-vip">$39.99</td><td class="td-mono">$12.00 (desde Oblivion)</td><td><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#FFD700;vertical-align:middle;margin-right:6px"></span>#FFD700</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">ℹ️</div>
+    <div class="callout-body"><strong>Configurar en Tebex</strong>Crear un paquete por cada rango VIP. Para los upgrades, usar la función de "upgrade packages" de Tebex que descuenta automáticamente el precio del rango anterior. Los precios pueden ajustarse según decisión del equipo antes de abrir la tienda.</div>
+  </div>
+</div>
+
+<!-- REGLAS -->
+<div class="chapter" id="vip-reglas">
+  <div class="ch-tag"><span class="n">07</span> — reglas del sistema</div>
+  <h2 class="ch-h2">Reglas del Sistema de Progresión</h2>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th style="width:160px">Regla</th><th>Detalle</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Beneficios acumulativos</strong></td><td>Cada rango conserva todos los beneficios de los rangos anteriores. Subir a Apex incluye todo lo que se ganó desde Hollow.</td></tr>
+        <tr><td><strong>VIPs independientes</strong></td><td>Los beneficios VIP no se suman a los del rankup. Un Arcane tiene sus 4 homes independientemente de si es Hollow o Apex.</td></tr>
+        <tr><td><strong>Sin beneficios combinados</strong></td><td>No existe ningún beneficio exclusivo por tener ambos VIP y Apex simultáneamente. Cada sistema da lo suyo.</td></tr>
+        <tr><td><strong>Permanencia</strong></td><td>El rankup se reinicia al inicio de cada nueva temporada — el jugador vuelve a Hollow. El VIP es permanente y nunca se pierde.</td></tr>
+        <tr><td><strong>Techo de homes</strong></td><td>Máximo 3 homes en rankup. Máximo 10 homes en VIP. Sin excepciones.</td></tr>
+        <tr><td><strong>El dinero se gasta</strong></td><td>El coste en monedas del rankup se descuenta al subir de rango. Es un sumidero económico real — no se verifica y ya, se cobra.</td></tr>
+        <tr><td><strong>Requisitos simultáneos</strong></td><td>Para rankear hay que cumplir todos los requisitos al mismo tiempo — horas, kills, misiones, materiales y dinero.</td></tr>
+        <tr><td><strong>Ventaja VIP</strong></td><td>Los VIPs tienen una ventaja tangible en los kits semanales — encantamientos ligeramente superiores a los de rankup (sin llegar a niveles exagerados). La ventaja se nota pero no desequilibra el servidor. No hay ventajas VIP en territorios ni en la economía del servidor.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+const secs = Array.from(document.querySelectorAll('.chapter[id]'));
+const links = document.querySelectorAll('.sb-link[href^="#"]');
+function upd(){
+  let cur = secs[0];
+  for(const s of secs){ if(s.getBoundingClientRect().top <= 100) cur = s; }
+  links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#'+cur.id));
+}
+window.addEventListener('scroll', upd, {passive:true});
+upd();
+</script>
+</body>
+</html>
